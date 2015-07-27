@@ -1,0 +1,24 @@
+{
+  "name": "axicli",
+  "version": "0.0.1",
+  "description": "CLI for rapid development on Ionic and Other JS based Applications",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vasumahesh1/axicli.git"
+  },
+  "keywords": [
+    "ionic",
+    "cli",
+    "build"
+  ],
+  "author": "Vasu Mahesh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vasumahesh1/axicli/issues"
+  },
+  "homepage": "https://github.com/vasumahesh1/axicli#readme"
+}
