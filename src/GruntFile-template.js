@@ -12,12 +12,13 @@ module.exports = function( grunt ) {
     return target;
   };
 
-  var _userConfig = grunt.file.readJSON( '.axirc' );
+  var _userConfig = grunt.file.readJSON( '.axirc' ).directories;
   var _defaultConfig = {
-    devFolder: 'dev',
-    appFolder: 'app',
-    lessFolder: 'less',
-    libFolder: 'lib',
+    developmentFolder: "dev/app",
+    applicationFolder: "www/app",
+    lessFolder: "dev/less",
+    cssFolder: "dev/css",
+    libFolder: "dev/lib"
   };
 
   var selectedConfig = _extends(_defaultConfig, _userConfig);
@@ -26,11 +27,16 @@ module.exports = function( grunt ) {
   grunt.initConfig( {
     gruntConfig: selectedConfig,
     globalConfig: {
-      appDir: '<%= gruntConfig.devFolder %>/<%= gruntConfig.appFolder %>',
-      lessDir: '<%= gruntConfig.devFolder %>/<%= gruntConfig.lessFolder %>',
-      libDir: '<%= gruntConfig.devFolder %>/<%= gruntConfig.libFolder %>',
+      developmentFolder: '<%= gruntConfig.developmentFolder %>',
+      applicationFolder: '<%= gruntConfig.applicationFolder %>',
+      lessFolder: '<%= gruntConfig.lessFolder %>',
+      cssFolder: '<%= gruntConfig.cssFolder %>',
+      libFolder: '<%= gruntConfig.libFolder %>',
       lessFiles: [
-        '<%= globalConfig.lessDir %>/**/*.less'
+        '<%= globalConfig.lessFolder %>/**/*.less'
+      ],
+      cssFiles: [
+        '<%= globalConfig.lessFolder %>/**/*.css'
       ],
       requiredMainFiles: [
         // '<%= globalConfig.appDir %>/main.js',

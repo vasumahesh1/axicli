@@ -1,15 +1,67 @@
 #!/usr/bin/env node
 
-exports = module.exports = new ProjectGen();
+var fs = require( "fs" );
+var colors = require( 'colors' );
 
-
-var ProjectGen = ProjectGen;
+var AxiConfig = ".axirc";
+var GruntConfig = "GruntFile.js";
+var GruntTemplatePath = "src/GruntFile-template.js";
+var CommandConfig =  require( 'package.json' );
 
 /**
  * Main Project Generator for Generating All Types of Projects in AxiCLI
  */
 function ProjectGen() {
+	this.projectConfig = null;
+	fs.writeFileSync( AxiConfig, "" );
+};
 
+ProjectGen.prototype.GenerateBaseConfig = function( projectType ) {
+
+	var _generateIonicProject = function() {
+
+	};
+
+	var _generateDefaultProject = function() {
+		var baseConfig = {};
+
+		baseConfig.dependencies = {};
+		baseConfig.dependencies.js = [];
+		baseConfig.dependencies.css = [];
+
+		baseConfig.directories = {};
+		baseConfig.directories.developmentFolder = "dev";
+		baseConfig.directories.applicationFolder = "www/app";
+		baseConfig.directories.lessFolder = "dev/less";
+		baseConfig.directories.libFolder = "dev/lib";
+
+		return baseConfig;
+	};
+
+	switch ( projectType ) {
+		// case "ionic": 
+		// 	break;
+
+		default: Utils.logInfo( "Custom Project - Building Config ..." );
+		this.projectConfig = _generateDefaultProject();
+		break;
+	}
+};
+
+ProjectGen.prototype.InstallGruntTemplate = function() {
+	var _gruntData = fs.readFileSync( GruntTemplatePath );
+	fs.writeFileSync( GruntConfig, _gruntData );
+};
+
+ProjectGen.prototype.WriteAxiConfig = function() {
+	fs.writeFileSync( AxiConfig, JSON.stringify( this.projectConfig, null, '\t' ) );
+};
+
+ProjectGen.prototype.BuildConfig = function( projectType ) {
+	this.GenerateBaseConfig( projectType );
+	this.InstallGruntTemplate();
+	this.WriteAxiConfig();
+	Utils.log( "Please update .axirc file for customized directory structure for your project." );
 };
 
 
@@ -28,9 +80,9 @@ var Utils = function() {
  *
  * @return     {Array}         returns the Target Options, which are Concatenated, to use further ahead.
  */
-Utils.prototype.extendOptions = function(_defaultConfig, _userConfig) {
-	for ( var i = 0; i < _userConfig.length; i++ ) {
-		var source = _userConfig[ i ];
+Utils.prototype.extendOptions = function( _defaultConfig, _userConfig ) {
+	for ( var configIndex = 0; configIndex < _userConfig.length; configIndex++ ) {
+		var source = _userConfig[ configIndex ];
 		for ( var key in source ) {
 			if ( Object.prototype.hasOwnProperty.extendOptions( source, key ) ) {
 				target[ key ] = source[ key ];
@@ -40,18 +92,24 @@ Utils.prototype.extendOptions = function(_defaultConfig, _userConfig) {
 	return target;
 };
 
-var configMaker = {};
+Utils.prototype.logError = function( message ) {
+	console.log( message.red );
+};
 
-configMaker.generateConfig = function( options ) {
+Utils.prototype.log = function( message ) {
+	console.log( message );
+};
 
-}
+Utils.prototype.logInfo = function( message ) {
+	console.log( message.blue );
+};
 
-
+var Utils = new Utils();
 
 var program = require( 'commander' );
 
 program
-	.version( '0.0.5' )
+	.version( CommandConfig.version )
 	.alias( 'axi' )
 	.option( 'init <projectType>', 'Build a Specific', /^(custom|ionic|angular|actonate-ionic|actonate-angular)$/i, 'custom' )
 	.option( 'build', 'Build Your Project' )
@@ -65,12 +123,9 @@ program
 	.parse( process.argv );
 
 if ( program.init ) {
-
-	switch ( program.init ) {
-		'custom':
-		// Building a Custom Project
-
-	}
+	Utils.logInfo( "Starting New Project ..." );
+	var ProjectGen = new ProjectGen();
+	ProjectGen.BuildConfig( program.init );
 }
 
 if ( program.build ) {

@@ -1,0 +1,30 @@
+{
+	"dependencies": {
+		"js": [ {
+			"min": "<minPath>",
+			"dev": "<devPath>"
+		} ],
+
+		"css": [
+
+		],
+
+		"less": [
+
+		]
+	},
+
+	"directories": {
+		"developmentFolder": "dev/app",
+		"applicationFolder": "www/app",
+		"lessFolder": "dev/less",
+		"libFolder": "dev/lib",
+	},
+
+	"fileSpecs" : [
+		{
+			"fileRegex" : "/*/*config*.js",
+			"fileFolder" : "developmentFolder",
+		}
+	]
+}
