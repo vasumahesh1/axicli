@@ -21,10 +21,18 @@
 		"libFolder": "dev/lib",
 	},
 
-	"fileSpecs" : [
-		{
-			"fileRegex" : "/*/*config*.js",
-			"fileFolder" : "developmentFolder",
+	"fileSpecs": {
+		"js": {
+			"fileOrder": [
+				"/**/*.config.js",
+				"/**/*.directive.js",
+				"/**/*.service.js",
+				"/**/*.ctrl.js",
+				"main.js",
+				"filters.js",
+				"services.js",
+				"directives.js"
+			]
 		}
-	]
+	}
 }

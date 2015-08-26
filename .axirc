@@ -1,0 +1,12 @@
+{
+	"dependencies": {
+		"js": [],
+		"css": []
+	},
+	"directories": {
+		"developmentFolder": "dev",
+		"applicationFolder": "www/app",
+		"lessFolder": "dev/less",
+		"libFolder": "dev/lib"
+	}
+}

@@ -1,133 +1,247 @@
 #!/usr/bin/env node
 
-var fs = require( "fs" );
-var colors = require( 'colors' );
+var fs = require("fs");
+var colors = require('colors');
 
-var AxiConfig = ".axirc";
-var GruntConfig = "GruntFile.js";
-var GruntTemplatePath = "src/GruntFile-template.js";
-var CommandConfig =  require( 'package.json' );
+var BashConfigPath = "/home/vasu/.bashrc";
+var ZshConfigPath = "/home/vasu/.zshrc";
 
+var AxiConfigPath = "/home/vasu/.axirc";
+var ServerConfigPath = "/home/vasu/.axiserver";
+var CommandConfig = require('./package.json');
+
+var serverConfig = "";
+
+
+var currentConfig = JSON.parse(fs.readFileSync(AxiConfigPath));
+currentConfig.user = currentConfig.user || "root";
 /**
  * Main Project Generator for Generating All Types of Projects in AxiCLI
  */
-function ProjectGen() {
-	this.projectConfig = null;
-	fs.writeFileSync( AxiConfig, "" );
-};
+// function ProjectGen() {
+// 	this.projectConfig = null;
+// 	fs.writeFileSync(AxiConfig, "");
+// };
 
-ProjectGen.prototype.GenerateBaseConfig = function( projectType ) {
+// ProjectGen.prototype.GenerateBaseConfig = function (projectType) {
 
-	var _generateIonicProject = function() {
+// 	var _generateIonicProject = function (isActonateSpecs) {
+// 		if (isActonateSpecs) {
 
-	};
+// 		}
+// 	};
 
-	var _generateDefaultProject = function() {
-		var baseConfig = {};
+// 	var _generateActonateProject = function (existingConfig) {
 
-		baseConfig.dependencies = {};
-		baseConfig.dependencies.js = [];
-		baseConfig.dependencies.css = [];
+// 		existingConfig.fileSpecs = {};
 
-		baseConfig.directories = {};
-		baseConfig.directories.developmentFolder = "dev";
-		baseConfig.directories.applicationFolder = "www/app";
-		baseConfig.directories.lessFolder = "dev/less";
-		baseConfig.directories.libFolder = "dev/lib";
+// 		existingConfig.fileSpecs.js = {};
 
-		return baseConfig;
-	};
+// 		existingConfig.fileSpecs.js.fileOrder = [];
+// 		existingConfig.fileSpecs.js.fileOrder.push("/**/*.config.js");
+// 		existingConfig.fileSpecs.js.fileOrder.push("/**/*.directive.js");
+// 		existingConfig.fileSpecs.js.fileOrder.push("/**/*.service.js");
+// 		existingConfig.fileSpecs.js.fileOrder.push("/**/*.ctrl.js");
+// 		existingConfig.fileSpecs.js.fileOrder.push("main.js");
+// 		existingConfig.fileSpecs.js.fileOrder.push("filters.js");
+// 		existingConfig.fileSpecs.js.fileOrder.push("services.js");
+// 		existingConfig.fileSpecs.js.fileOrder.push("directives.js");
 
-	switch ( projectType ) {
-		// case "ionic": 
-		// 	break;
+// 		return existingConfig;
+// 	};
 
-		default: Utils.logInfo( "Custom Project - Building Config ..." );
-		this.projectConfig = _generateDefaultProject();
-		break;
-	}
-};
+// 	var _generateDefaultProject = function () {
+// 		var baseConfig = {};
 
-ProjectGen.prototype.InstallGruntTemplate = function() {
-	var _gruntData = fs.readFileSync( GruntTemplatePath );
-	fs.writeFileSync( GruntConfig, _gruntData );
-};
+// 		baseConfig.dependencies = {};
+// 		baseConfig.dependencies.js = [];
+// 		baseConfig.dependencies.css = [];
 
-ProjectGen.prototype.WriteAxiConfig = function() {
-	fs.writeFileSync( AxiConfig, JSON.stringify( this.projectConfig, null, '\t' ) );
-};
+// 		baseConfig.directories = {};
+// 		baseConfig.directories.developmentFolder = "dev";
+// 		baseConfig.directories.applicationFolder = "www/app";
+// 		baseConfig.directories.lessFolder = "dev/less";
+// 		baseConfig.directories.libFolder = "dev/lib";
 
-ProjectGen.prototype.BuildConfig = function( projectType ) {
-	this.GenerateBaseConfig( projectType );
-	this.InstallGruntTemplate();
-	this.WriteAxiConfig();
-	Utils.log( "Please update .axirc file for customized directory structure for your project." );
-};
+// 		return baseConfig;
+// 	};
 
+// 	switch (projectType) {
+// 	case "actonate":
+// 		this.projectConfig = _generateActonateProject(_generateDefaultProject());
+// 		break;
 
-var Utils = function() {
+// 	default:
+// 		Utils.logInfo("Custom Project - Building Config ...");
+// 		this.projectConfig = _generateDefaultProject();
+// 		break;
+// 	}
+// };
 
-};
+// ProjectGen.prototype.InstallGruntTemplate = function () {
+// 	var _gruntData = fs.readFileSync(GruntTemplatePath);
+// 	fs.writeFileSync(GruntConfig, _gruntData);
+// };
+
+// ProjectGen.prototype.WriteAxiConfig = function () {
+// 	fs.writeFileSync(AxiConfig, JSON.stringify(this.projectConfig, null, '\t'));
+// };
+
+// ProjectGen.prototype.BuildConfig = function (projectType) {
+// 	this.GenerateBaseConfig(projectType);
+// 	this.InstallGruntTemplate();
+// 	this.WriteAxiConfig();
+// 	if (projectType == "custom") {
+// 		Utils.log("Please update .axirc file for custom directory structure for your project.");
+// 	}
+// };
 
 /**
- * Function to Extend User Options with System Defined Options
+ * Server Gen
  *
- * @class       Utils
- *
- *
- * @param      {Object}  _defaultConfig  Exisitng Set of Options
- * @param      {Object}  _userConfig     User's Specific COnfig
- *
- * @return     {Array}         returns the Target Options, which are Concatenated, to use further ahead.
+ * @class
  */
-Utils.prototype.extendOptions = function( _defaultConfig, _userConfig ) {
-	for ( var configIndex = 0; configIndex < _userConfig.length; configIndex++ ) {
-		var source = _userConfig[ configIndex ];
-		for ( var key in source ) {
-			if ( Object.prototype.hasOwnProperty.extendOptions( source, key ) ) {
-				target[ key ] = source[ key ];
+
+var ServerGen = function () {};
+
+ServerGen.InstallServer = function (serverObject) {
+	var easySsh = function (serverObject) {
+		serverConfig += "alias ssh-" + serverObject.name + "='ssh " + currentConfig.user + "@" + serverObject.ip + "'\n";
+	};
+
+
+
+	easySsh(serverObject);
+};
+
+var Utils = function () {
+
+};
+
+Utils.prototype.logError = function (message) {
+	console.log("[AxiCLI] ".red + message.red);
+};
+
+Utils.prototype.log = function (message) {
+	console.log("[AxiCLI] " + message);
+};
+
+Utils.prototype.logInfo = function (message) {
+	console.log("[AxiCLI] ".blue + message.blue);
+};
+
+Utils.prototype.updateConfig = function (configType, callback) {
+	if (configType == "server" && serverConfig && serverConfig != "") {
+		fs.exists(ServerConfigPath, function (exists) {
+			if (exists) {
+				fs.unlinkSync(ServerConfigPath);
 			}
+
+			fs.writeFileSync(ServerConfigPath, serverConfig);
+			callback(false, {
+				message: "Updated AxiServer Config"
+			});
+		});
+	} else {
+		callback(true, {
+			message: "Invalid Update Key"
+		});
+	}
+};
+
+Utils.prototype.updateShellConfig = function (configTypes, callback) {
+	var configCli = [];
+
+	var appendMissingConfigs = function (filePath) {
+		Utils.log("Reading file ... " + filePath);
+		var fileData = fs.readFileSync(filePath);
+		for (var i = configCli.length - 1; i >= 0; i--) {
+			if (fileData.indexOf(configCli[i]) == -1) {
+				fs.appendFileSync(filePath, configCli[i] + "\n");
+			}
+		};
+	};
+
+	for (var i = configTypes.length - 1; i >= 0; i--) {
+		if (configTypes[i] == "server" && serverConfig && serverConfig != "") {
+			configCli.push(". ~/.axiserver");
 		}
 	}
-	return target;
+
+	fs.exists(ZshConfigPath, function (exists) {
+		if (exists) {
+			appendMissingConfigs(ZshConfigPath);
+			callback(false, {
+				message: "Updated ZSH Config"
+			});
+		} else {
+			fs.exists(BashConfigPath, function (exists) {
+				if (exists) {
+					appendMissingConfigs(BashConfigPath);
+					callback(false, {
+						message: "Updated Bash Config"
+					});
+				} else {
+					callback(true, {
+						message: "Can't Find Bash or ZSH Config File in ~"
+					});
+				}
+			});
+		}
+	});
 };
 
-Utils.prototype.logError = function( message ) {
-	console.log( message.red );
-};
-
-Utils.prototype.log = function( message ) {
-	console.log( message );
-};
-
-Utils.prototype.logInfo = function( message ) {
-	console.log( message.blue );
-};
 
 var Utils = new Utils();
 
-var program = require( 'commander' );
+var program = require('commander');
 
 program
-	.version( CommandConfig.version )
-	.alias( 'axi' )
-	.option( 'init <projectType>', 'Build a Specific', /^(custom|ionic|angular|actonate-ionic|actonate-angular)$/i, 'custom' )
-	.option( 'build', 'Build Your Project' )
-	.option( 'build-dep', 'Build Project Dependencies' )
-	.option( 'build-all', 'Build Everything' )
-	.option( 'dist', 'Get Your Project Ready for Deployment' )
-	.option( 'dist-dep', 'Get Project Dependencies Optimized' )
-	.option( 'dist-all', 'Optimize Everything' )
-	.option( 'dev', 'Development Watcher' )
-	.option( 'prod', 'Production Watcher' )
-	.parse( process.argv );
+	.version(CommandConfig.version)
+	.alias('axi')
+	.option('install <installType>', 'Install AxiCLI Components', /^(shell)$/i)
+	.option('update <updateType>', 'Update AxiCLI Components', /^(shell)$/i)
+	.parse(process.argv);
 
-if ( program.init ) {
-	Utils.logInfo( "Starting New Project ..." );
-	var ProjectGen = new ProjectGen();
-	ProjectGen.BuildConfig( program.init );
-}
 
-if ( program.build ) {
+// .option('init <projectType>', 'Build a Specific', /^(custom|ionic|angular|actonate-ionic|actonate-angular|actonate)$/i)
+// .option('build', 'Build Your Project')
+// .option('build-dep', 'Build Project Dependencies')
+// .option('build-all', 'Build Everything')
+// .option('dist', 'Get Your Project Ready for Deployment')
+// .option('dist-dep', 'Get Project Dependencies Optimized')
+// .option('dist-all', 'Optimize Everything')
+// .option('dev', 'Development Watcher')
+// .option('prod', 'Production Watcher')
 
+// if (program.init) {
+// 	Utils.logInfo("Starting New Project ...");
+// 	var ProjectGen = new ProjectGen();
+// 	ProjectGen.BuildConfig(program.init);
+// }
+
+if (program.install) {
+	if (program.install === "shell") {
+		serverConfig = "";
+		// Configure the Shell
+		for (var i = currentConfig.servers.length - 1; i >= 0; i--) {
+			ServerGen.InstallServer(currentConfig.servers[i]);
+		}
+
+		Utils.updateConfig("server", function (err, result) {
+			if (err) {
+				Utils.logError(result.message);
+			} else {
+				Utils.logInfo(result.message);
+
+				Utils.updateShellConfig(["server"], function (err, result) {
+					if (err) {
+						Utils.logError(result.message);
+					} else {
+						Utils.logInfo(result.message);
+					}
+				});
+			}
+		});
+	}
 }
