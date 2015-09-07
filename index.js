@@ -168,7 +168,7 @@ var Utils = function () {
 
 			}
 
-			fs.writeFileSync(AXI_CONFIG_PATH, JSON.stringify(body.axirc));
+			fs.writeFileSync(AXI_CONFIG_PATH, JSON.stringify(body.axirc, null ,2));
 			callback(false, {
 				message: "Updated Base Config"
 			});
