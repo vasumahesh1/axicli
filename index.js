@@ -228,7 +228,8 @@ var Cli = function () {
 		var self = this;
 
 		var baseConfig = JSON.parse(fs.readFileSync(AXI_BASE_PATH, "UTF-8"));
-
+		var setupData = {};
+		
 		setupData.cdn = baseConfig.cdn;
 		setupData.ssh_username = baseConfig.ssh_username;
 
@@ -283,7 +284,8 @@ var Cli = function () {
 
 	return {
 		setup: _setup,
-		install: _install
+		install: _install,
+		update: _update
 	};
 };
 
