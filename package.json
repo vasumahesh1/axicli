@@ -1,6 +1,6 @@
 {
   "name": "axicli",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "CLI for rapid development on Ionic and Other JS based Applications",
   "main": "index.js",
   "scripts": {
@@ -20,13 +20,19 @@
   "bugs": {
     "url": "https://github.com/vasumahesh1/axicli/issues"
   },
+  "preferGlobal": "true",
   "bin": {
-    "axicli": "./bin/index.js"
+    "axicli": "./index.js"
   },
   "homepage": "https://github.com/vasumahesh1/axicli#readme",
   "dependencies": {
     "colors": "^1.1.2",
     "commander": "^2.8.1",
-    "prompt": "^0.2.14"
+    "prompt": "^0.2.14",
+    "request": "^2.61.0"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-release": "^0.13.0"
   }
 }
