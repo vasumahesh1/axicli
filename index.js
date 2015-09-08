@@ -5,6 +5,7 @@ var colors = require('colors');
 var request = require('request');
 var prompt = require('prompt');
 var program = require('commander');
+var exec = require('child_process').exec;
 
 prompt.start();
 
@@ -17,6 +18,11 @@ var AXI_CONFIG_FILE;
 var AXI_CONFIG_PATH;
 var AXI_SHELL_CONFIG_FILE;
 var AXI_SHELL_CONFIG;
+
+var AXI_SHELL_TEMPLATE = "./src/.axibase-template";
+
+var CDN_CONFIG_FILE = "config.json";
+
 
 var DIRECTORY_SEP = process.platform == "win32" ? "\\" : "/";
 
@@ -63,8 +69,29 @@ var getUserHome = function () {
 	return process.env['HOME'];
 }
 
+var getCurrentShell = function () {
+	return process.env.SHELL;
+}
+
+var isShellBash = function () {
+	if (getCurrentShell().indexOf("bash") !== -1) {
+		return true;
+	}
+	return false;
+}
+
+var isShellZsh = function () {
+	if (getCurrentShell().indexOf("zsh") !== -1) {
+		return true;
+	}
+	return false;
+}
+
 /**
  * Server Gen
+ * 
+ *
+ * alias copy-server='copy_from_server root 128.128.128.128 /home/root/ $@'
  *
  * @class
  */
@@ -75,7 +102,13 @@ var ServerGen = function () {
 			serverConfig += "alias ssh-root-" + serverObject.name + "='ssh root@" + serverObject.ip + "'\n";
 		};
 
+		var easyCopyFrom = function (serverObject) {
+			serverConfig += "alias copy-from-" + serverObject.name + "='copy_from_server " + currentConfig.user + " " + serverObject.ip + " " + "/home/" + currentConfig.user + "/" + " $@" + "'\n";
+			serverConfig += "alias copy-from-root-" + serverObject.name + "='copy_from_server root " + serverObject.ip + " /root/ $@'\n";
+		};
+
 		easySsh(serverObject);
+		easyCopyFrom(serverObject);
 	};
 
 	return {
@@ -108,7 +141,11 @@ var Utils = function () {
 					fs.unlinkSync(AXI_SHELL_CONFIG);
 				}
 
-				fs.writeFileSync(AXI_SHELL_CONFIG, serverConfig);
+				var baseTemplate = fs.readFileSync(AXI_SHELL_TEMPLATE, "UTF-8");
+
+				var mainTemplate = baseTemplate + "\n" + serverConfig;
+
+				fs.writeFileSync(AXI_SHELL_CONFIG, mainTemplate);
 				callback(false, {
 					message: "Updated AxiServer Config"
 				});
@@ -129,46 +166,60 @@ var Utils = function () {
 			}
 		}
 
-		fs.exists(ZSH_CONFIG_PATH, function (exists) {
-			if (exists) {
-				appendMissingConfigs(ZSH_CONFIG_PATH, configCli);
-				callback(false, {
-					message: "Updated ZSH Config"
-				});
-			} else {
-				fs.exists(BASH_CONFIG_PATH, function (exists) {
-					if (exists) {
-						appendMissingConfigs(BASH_CONFIG_PATH, configCli);
-						callback(false, {
-							message: "Updated Bash Config"
-						});
-					} else {
-						callback(true, {
-							message: "Can't Find Bash or ZSH Config File in ~ (home) directory"
-						});
-					}
-				});
-			}
-		});
+		if (isShellZsh()) {
+			fs.exists(ZSH_CONFIG_PATH, function (exists) {
+				if (exists) {
+					appendMissingConfigs(ZSH_CONFIG_PATH, configCli);
+					callback(false, {
+						message: "Updated ZSH Config"
+					});
+				} else {
+					callback(true, {
+						message: "Can't Find ZSH Config File in ~ (home) directory"
+					});
+				}
+			});
+
+		} else if (isShellBash()) {
+			fs.exists(BASH_CONFIG_PATH, function (exists) {
+				if (exists) {
+					appendMissingConfigs(BASH_CONFIG_PATH, configCli);
+					callback(false, {
+						message: "Updated Bash Config"
+					});
+				} else {
+					callback(true, {
+						message: "Can't Find Bash Config File in ~ (home) directory"
+					});
+				}
+			});
+		} else {
+			callback(true, {
+				message: "Can't Find Bash or Zsh Config File in ~ (home) directory"
+			});
+		}
 	};
 
 	var _setupCli = function (newConfigData, callback) {
 		var configCli = [];
+		if (newConfigData.cdn[newConfigData.cdn.length - 1] !== "/") {
+			newConfigData.cdn += "/";
+		}
+
 		request.get({
-			url: newConfigData.cdn,
+			url: newConfigData.cdn + CDN_CONFIG_FILE,
 			json: true
 		}, function (err, httpResponse, body) {
-			if (err) {
+			if (err || httpResponse.statusCode !== 200) {
 				callback(true, {
 					message: "Unable to get DB Name from Server : " + newConfigData.cdn + " Please check your CDN",
 					error: err
 				});
 
 				return;
-
 			}
 
-			fs.writeFileSync(AXI_CONFIG_PATH, JSON.stringify(body.axirc, null ,2));
+			fs.writeFileSync(AXI_CONFIG_PATH, JSON.stringify(body.axirc, null, 2));
 			callback(false, {
 				message: "Updated Base Config"
 			});
@@ -191,8 +242,24 @@ UtilsInstance = Utils();
 var Cli = function () {
 
 	var _install = function (callback) {
-		var baseConfig = JSON.parse(fs.readFileSync(AXI_BASE_PATH, "UTF-8"));
-		currentConfig = JSON.parse(fs.readFileSync(AXI_CONFIG_PATH, "UTF-8"));
+		var baseConfigString = fs.readFileSync(AXI_BASE_PATH, "UTF-8");
+		if (!baseConfigString) {
+			callback(true, {
+				message: "Unable to read config file " + AXI_BASE_PATH
+			});
+			return;
+		}
+		var baseConfig = JSON.parse(baseConfigString);
+
+		var currentConfigString = fs.readFileSync(AXI_CONFIG_PATH, "UTF-8");
+		if (!currentConfigString) {
+			callback(true, {
+				message: "Unable to read config file " + AXI_CONFIG_PATH
+			});
+			return;
+		}
+
+		currentConfig = JSON.parse(currentConfigString);
 		currentConfig.user = baseConfig.ssh_username || "root";
 
 		serverConfig = "";
@@ -212,13 +279,44 @@ var Cli = function () {
 				UtilsInstance.updateShellConfig(["server"], function (err, result) {
 					if (err) {
 						UtilsInstance.logError(result.message);
+						callback(true, {
+							message: "Unable to Install CLI: Updating config failed"
+						});
+
 					} else {
 						UtilsInstance.logInfo(result.message);
+						UtilsInstance.logInfo("Restarting Your Shell");
+						if (isShellZsh()) {
+							exec('source ~/.zshrc',
+								function (error, stdout, stderr) {
+									if (error !== null) {
+										UtilsInstance.logError("Failed to restart Zsh Shell" + error);
+										callback(true, {
+											message: "Restarting Zsh Shell Failed"
+										});
+									} else {
+										callback(false, {
+											message: "Installed CLI Successfully"
+										});
+									}
+								});
+						} else if (isShellBash()) {
+							exec('source ~/.bashrc',
+								function (error, stdout, stderr) {
+									if (error !== null) {
+										UtilsInstance.logError("Failed to restart Bash Shell");
+										callback(true, {
+											message: "Restarting Bash Shell Failed"
+										});
+									} else {
+										callback(false, {
+											message: "Installed CLI Successfully"
+										});
+									}
+								});
+						}
 					}
 
-					callback(false, {
-						message: "Installed CLI Successfully"
-					});
 				});
 			}
 		});
@@ -229,7 +327,7 @@ var Cli = function () {
 
 		var baseConfig = JSON.parse(fs.readFileSync(AXI_BASE_PATH, "UTF-8"));
 		var setupData = {};
-		
+
 		setupData.cdn = baseConfig.cdn;
 		setupData.ssh_username = baseConfig.ssh_username;
 
@@ -265,7 +363,7 @@ var Cli = function () {
 		prompt.get(['cdn', 'ssh_username'], function (err, result) {
 			setupData.cdn = result.cdn;
 			setupData.ssh_username = result.ssh_username;
-			
+
 			fs.writeFileSync(AXI_BASE_PATH, JSON.stringify(setupData, null, 2));
 
 			UtilsInstance.setupCli(setupData, function (err, result) {

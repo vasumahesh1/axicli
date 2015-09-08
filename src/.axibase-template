@@ -1,0 +1,12 @@
+function copy_from_server {
+
+	if [[ "$4" = /* ]]
+	then
+	   : # Absolute path
+	   "scp $1@$2:$4 $5"
+	else
+	   : # Relative path
+	   "scp $1@$2:$3$4 $5"
+	fi
+}
+
