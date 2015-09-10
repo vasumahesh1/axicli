@@ -107,8 +107,14 @@ var ServerGen = function () {
 			serverConfig += "alias copy-from-root-" + serverObject.name + "='copy_from_server root " + serverObject.ip + " /root/ $@'\n";
 		};
 
+		var easyCopyTo = function (serverObject) {
+			serverConfig += "alias copy-to-" + serverObject.name + "='copy_to_server " + currentConfig.user + " " + serverObject.ip + " " + "/home/" + currentConfig.user + "/" + " $@" + "'\n";
+			serverConfig += "alias copy-to-root-" + serverObject.name + "='copy_to_server root " + serverObject.ip + " /root/ $@'\n";
+		};
+
 		easySsh(serverObject);
 		easyCopyFrom(serverObject);
+		easyCopyTo(serverObject);
 	};
 
 	return {
@@ -290,7 +296,7 @@ var Cli = function () {
 							exec('source ~/.zshrc',
 								function (error, stdout, stderr) {
 									if (error !== null) {
-										UtilsInstance.logError("Failed to restart Zsh Shell" + error);
+										UtilsInstance.logError("Failed to restart Zsh Shell, Please Try Manually. " + error);
 										callback(true, {
 											message: "Restarting Zsh Shell Failed"
 										});
