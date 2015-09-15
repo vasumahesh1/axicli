@@ -121,9 +121,12 @@ var ServerGen = function () {
 
 	// cat ~/.ssh/id_rsa.pub | ssh user@hostname 'cat >> ~/.ssh/authorized_keys'
 	var _registerServer = function (serverObject, callback) {
-		exec("cat ~/.ssh/id_rsa.pub | ssh " + currentConfig.user + "@" + serverObject.ip + " 'cat >> ~/.ssh/authorized_keys",
+		exec("cat ~/.ssh/id_rsa.pub | ssh " + currentConfig.user + "@" + serverObject.ip + " 'cat >> ~/.ssh/authorized_keys'",
 			function (error, stdout, stderr) {
 				if (error !== null) {
+					UtilsInstance.nl();
+					UtilsInstance.logError("Manually Execute This: cat ~/.ssh/id_rsa.pub | ssh " + currentConfig.user + "@" + serverObject.ip + " 'cat >> ~/.ssh/authorized_keys'");
+					UtilsInstance.nl();
 					callback(true, {
 						message: "Failed to register your keys to the Server " + error
 					});
@@ -153,6 +156,10 @@ var Utils = function () {
 
 	var _log = function (message) {
 		console.log("[AxiCLI] " + message);
+	};
+
+	var _nl = function () {
+		console.log("");
 	};
 
 	var _logInfo = function (message) {
@@ -255,6 +262,7 @@ var Utils = function () {
 		logError: _logError,
 		log: _log,
 		logInfo: _logInfo,
+		nl: _nl,
 		installConfig: _installConfig,
 		updateShellConfig: _updateShellConfig,
 		downloadConfig: _downloadConfig
@@ -334,6 +342,9 @@ var Cli = function () {
 							exec('source ~/.zshrc',
 								function (error, stdout, stderr) {
 									if (error !== null) {
+										UtilsInstance.nl();
+										UtilsInstance.logError("Manually Execute: source ~/.zshrc");
+										UtilsInstance.nl();
 										UtilsInstance.logError("Failed to restart Zsh Shell, Please Try Manually. " + error);
 										callback(true);
 									} else {
@@ -425,7 +436,6 @@ var Cli = function () {
 	var _registerServer = function (serverName, callback) {
 		if (serverName) {
 			var configs = _loadConfig(callback);
-			console.log(configs);
 			var selectedServer = false;
 
 			if (!configs) {
