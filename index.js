@@ -121,11 +121,11 @@ var ServerGen = function () {
 
 	// cat ~/.ssh/id_rsa.pub | ssh user@hostname 'cat >> ~/.ssh/authorized_keys'
 	var _registerServer = function (serverObject, callback) {
-		exec("cat ~/.ssh/id_rsa.pub | ssh " + currentConfig.user + "@" + serverObject.ip + " 'cat >> ~/.ssh/authorized_keys'",
+		exec("cat ~/.ssh/id_rsa.pub | ssh " + currentConfig.user + "@" + serverObject.ip + " 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'",
 			function (error, stdout, stderr) {
 				if (error !== null) {
 					UtilsInstance.nl();
-					UtilsInstance.logError("Manually Execute This: cat ~/.ssh/id_rsa.pub | ssh " + currentConfig.user + "@" + serverObject.ip + " 'cat >> ~/.ssh/authorized_keys'");
+					UtilsInstance.logError("Manually Execute This: cat ~/.ssh/id_rsa.pub | ssh " + currentConfig.user + "@" + serverObject.ip + " 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'");
 					UtilsInstance.nl();
 					callback(true, {
 						message: "Failed to register your keys to the Server " + error

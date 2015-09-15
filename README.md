@@ -49,3 +49,8 @@ axicli update shell
 ```
 This will redownload the config and remake your shell.
 
+#### Register Your Keys in Server
+```sh
+axicli register <server_name>
+```
+This will put your ssh keys located at `.ssh/id_rsa.pub` into the Server's Authorized Keys (if there is no ssh folder in the server it will be created along with the file)
