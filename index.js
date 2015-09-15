@@ -9,6 +9,7 @@ var exec = require('child_process').exec;
 
 prompt.start();
 
+var AXI_CLI_FOLDER = ".axicli/";
 var HOME_DIR;
 var BASH_CONFIG_PATH;
 var ZSH_CONFIG_PATH;
@@ -19,7 +20,7 @@ var AXI_CONFIG_PATH;
 var AXI_SHELL_CONFIG_FILE;
 var AXI_SHELL_CONFIG;
 
-var AXI_SHELL_TEMPLATE = "./src/.axibase-template";
+var AXI_SHELL_TEMPLATE = __dirname + "/src/.axibase-template";
 
 var CDN_CONFIG_FILE = "config.json";
 
@@ -29,9 +30,10 @@ var DIRECTORY_SEP = process.platform == "win32" ? "\\" : "/";
 var PACKAGE_CONFIG = require('./package.json');
 
 var serverConfig = "";
-var currentConfig = {};
+var currentConfig = false;
+var baseConfig = false;
 
-var ServerGenInstance;
+var serverGenInstance;
 var UtilsInstance;
 var CliInstance;
 
@@ -56,13 +58,13 @@ var initVariables = function (homeDir) {
 	ZSH_CONFIG_PATH = HOME_DIR + ".zshrc";
 
 	AXI_BASE_FILE = ".axibase";
-	AXI_BASE_PATH = HOME_DIR + AXI_BASE_FILE;
+	AXI_BASE_PATH = HOME_DIR + AXI_CLI_FOLDER + AXI_BASE_FILE;
 
 	AXI_CONFIG_FILE = ".axirc";
-	AXI_CONFIG_PATH = HOME_DIR + AXI_CONFIG_FILE;
+	AXI_CONFIG_PATH = HOME_DIR + AXI_CLI_FOLDER + AXI_CONFIG_FILE;
 
 	AXI_SHELL_CONFIG_FILE = ".axishrc";
-	AXI_SHELL_CONFIG = HOME_DIR + AXI_SHELL_CONFIG_FILE;
+	AXI_SHELL_CONFIG = HOME_DIR + AXI_CLI_FOLDER + AXI_SHELL_CONFIG_FILE;
 };
 
 var getUserHome = function () {
@@ -117,14 +119,31 @@ var ServerGen = function () {
 		easyCopyTo(serverObject);
 	};
 
+	// cat ~/.ssh/id_rsa.pub | ssh user@hostname 'cat >> ~/.ssh/authorized_keys'
+	var _registerServer = function (serverObject, callback) {
+		exec("cat ~/.ssh/id_rsa.pub | ssh " + currentConfig.user + "@" + serverObject.ip + " 'cat >> ~/.ssh/authorized_keys",
+			function (error, stdout, stderr) {
+				if (error !== null) {
+					callback(true, {
+						message: "Failed to register your keys to the Server " + error
+					});
+				} else {
+					callback(false, {
+						message: "Installed SSH Keys to - " + serverObject.name
+					});
+				}
+			});
+	};
+
 	return {
-		installServer: _installServer
+		installServer: _installServer,
+		registerServer: _registerServer
 	};
 };
 
 
 
-ServerGenInstance = ServerGen();
+serverGenInstance = ServerGen();
 
 var Utils = function () {
 
@@ -168,7 +187,7 @@ var Utils = function () {
 
 		for (var i = configTypes.length - 1; i >= 0; i--) {
 			if (configTypes[i] == "server" && serverConfig && serverConfig != "") {
-				configCli.push(". ~/" + AXI_SHELL_CONFIG_FILE);
+				configCli.push(". ~/" + AXI_CLI_FOLDER + AXI_SHELL_CONFIG_FILE);
 			}
 		}
 
@@ -206,7 +225,7 @@ var Utils = function () {
 		}
 	};
 
-	var _setupCli = function (newConfigData, callback) {
+	var _downloadConfig = function (newConfigData, callback) {
 		var configCli = [];
 		if (newConfigData.cdn[newConfigData.cdn.length - 1] !== "/") {
 			newConfigData.cdn += "/";
@@ -238,7 +257,7 @@ var Utils = function () {
 		logInfo: _logInfo,
 		installConfig: _installConfig,
 		updateShellConfig: _updateShellConfig,
-		setupCli: _setupCli
+		downloadConfig: _downloadConfig
 	};
 
 };
@@ -247,7 +266,14 @@ UtilsInstance = Utils();
 
 var Cli = function () {
 
-	var _install = function (callback) {
+	var _loadConfig = function (callback) {
+		if (currentConfig && baseConfig) {
+			return {
+				currentConfig: currentConfig,
+				baseConfig: baseConfig
+			};
+		}
+
 		var baseConfigString = fs.readFileSync(AXI_BASE_PATH, "UTF-8");
 		if (!baseConfigString) {
 			callback(true, {
@@ -255,7 +281,7 @@ var Cli = function () {
 			});
 			return;
 		}
-		var baseConfig = JSON.parse(baseConfigString);
+		baseConfig = JSON.parse(baseConfigString);
 
 		var currentConfigString = fs.readFileSync(AXI_CONFIG_PATH, "UTF-8");
 		if (!currentConfigString) {
@@ -268,26 +294,38 @@ var Cli = function () {
 		currentConfig = JSON.parse(currentConfigString);
 		currentConfig.user = baseConfig.ssh_username || "root";
 
+		return {
+			currentConfig: currentConfig,
+			baseConfig: baseConfig
+		};
+	};
+
+	var _install = function (callback) {
+
+		var configs = _loadConfig(callback);
+
+		if (!configs) {
+			return;
+		}
+
+		currentConfig = configs.currentConfig;
+
 		serverConfig = "";
 		// Configure the Shell
 		for (var i = currentConfig.servers.length - 1; i >= 0; i--) {
-			ServerGenInstance.installServer(currentConfig.servers[i]);
+			serverGenInstance.installServer(currentConfig.servers[i]);
 		}
 
 		UtilsInstance.installConfig("server", function (err, result) {
 			if (err) {
 				UtilsInstance.logError(result.message);
-				callback(true, {
-					message: "Unable to Install CLI"
-				});
+				callback(true);
 			} else {
 				UtilsInstance.logInfo(result.message);
 				UtilsInstance.updateShellConfig(["server"], function (err, result) {
 					if (err) {
 						UtilsInstance.logError(result.message);
-						callback(true, {
-							message: "Unable to Install CLI: Updating config failed"
-						});
+						callback(true);
 
 					} else {
 						UtilsInstance.logInfo(result.message);
@@ -297,13 +335,9 @@ var Cli = function () {
 								function (error, stdout, stderr) {
 									if (error !== null) {
 										UtilsInstance.logError("Failed to restart Zsh Shell, Please Try Manually. " + error);
-										callback(true, {
-											message: "Restarting Zsh Shell Failed"
-										});
+										callback(true);
 									} else {
-										callback(false, {
-											message: "Installed CLI Successfully"
-										});
+										callback(false);
 									}
 								});
 						} else if (isShellBash()) {
@@ -311,13 +345,9 @@ var Cli = function () {
 								function (error, stdout, stderr) {
 									if (error !== null) {
 										UtilsInstance.logError("Failed to restart Bash Shell");
-										callback(true, {
-											message: "Restarting Bash Shell Failed"
-										});
+										callback(true);
 									} else {
-										callback(false, {
-											message: "Installed CLI Successfully"
-										});
+										callback(false);
 									}
 								});
 						}
@@ -329,20 +359,23 @@ var Cli = function () {
 	};
 
 	var _update = function (callback) {
-		var self = this;
+		var configs = _loadConfig(callback);
 
-		var baseConfig = JSON.parse(fs.readFileSync(AXI_BASE_PATH, "UTF-8"));
+		if (!configs) {
+			return;
+		}
+
+		baseConfig = configs.baseConfig;
+
 		var setupData = {};
 
 		setupData.cdn = baseConfig.cdn;
 		setupData.ssh_username = baseConfig.ssh_username;
 
-		UtilsInstance.setupCli(setupData, function (err, result) {
+		UtilsInstance.downloadConfig(setupData, function (err, result) {
 			if (err) {
 				UtilsInstance.logError(result.message);
-				callback(true, {
-					message: "Unable to Install CLI"
-				});
+				callback(true);
 			} else {
 				UtilsInstance.logInfo(result.message);
 				_install(callback);
@@ -351,7 +384,6 @@ var Cli = function () {
 	};
 
 	var _setup = function (callback) {
-		var self = this;
 		var setupData = {};
 		var schema = {
 			properties: {
@@ -366,30 +398,69 @@ var Cli = function () {
 			}
 		};
 
-		prompt.get(['cdn', 'ssh_username'], function (err, result) {
-			setupData.cdn = result.cdn;
-			setupData.ssh_username = result.ssh_username;
+		fs.exists(HOME_DIR + AXI_CLI_FOLDER, function (exists) {
+			if (!exists) {
+				fs.mkdirSync(HOME_DIR + AXI_CLI_FOLDER);
+			}
 
-			fs.writeFileSync(AXI_BASE_PATH, JSON.stringify(setupData, null, 2));
+			prompt.get(['cdn', 'ssh_username'], function (err, result) {
+				setupData.cdn = result.cdn;
+				setupData.ssh_username = result.ssh_username;
 
-			UtilsInstance.setupCli(setupData, function (err, result) {
-				if (err) {
-					UtilsInstance.logError(result.message);
-					callback(true, {
-						message: "Unable to Install CLI"
-					});
-				} else {
-					UtilsInstance.logInfo(result.message);
-					_install(callback);
-				}
+				fs.writeFileSync(AXI_BASE_PATH, JSON.stringify(setupData, null, 2));
+
+				UtilsInstance.downloadConfig(setupData, function (err, result) {
+					if (err) {
+						UtilsInstance.logError(result.message);
+						callback(true);
+					} else {
+						UtilsInstance.logInfo(result.message);
+						_install(callback);
+					}
+				});
 			});
 		});
+	};
+
+	var _registerServer = function (serverName, callback) {
+		if (serverName) {
+			var configs = _loadConfig(callback);
+			console.log(configs);
+			var selectedServer = false;
+
+			if (!configs) {
+				return;
+			}
+
+			currentConfig = configs.currentConfig;
+
+			for (var i = currentConfig.servers.length - 1; i >= 0; i--) {
+				if (currentConfig.servers[i].name === serverName) {
+					selectedServer = currentConfig.servers[i];
+				}
+			}
+
+			if (selectedServer) {
+				serverGenInstance.registerServer(selectedServer, function (err, result) {
+					if (err) {
+						UtilsInstance.logError(result.message);
+						callback(true);
+					} else {
+						UtilsInstance.logInfo(result.message);
+						callback(false);
+					}
+				});
+			} else {
+				UtilsInstance.logError("Unable to find Server with name - " + serverName);
+			}
+		}
 	};
 
 	return {
 		setup: _setup,
 		install: _install,
-		update: _update
+		update: _update,
+		registerServer: _registerServer
 	};
 };
 
@@ -402,6 +473,7 @@ program
 	.option('setup', 'Setup AxiCLI')
 	.option('install <installType>', 'Install AxiCLI Components', /^(shell)$/i)
 	.option('update <updateType>', 'Update AxiCLI Components', /^(shell)$/i)
+	.option('register <serverName>', 'Register your SSH key in the server')
 	.parse(process.argv);
 
 initVariables(getUserHome());
@@ -425,4 +497,10 @@ if (program.update) {
 			process.exit(0);
 		});
 	}
+}
+
+if (program.register) {
+	CliInstance.registerServer(program.register, function (err) {
+		process.exit(0);
+	});
 }
