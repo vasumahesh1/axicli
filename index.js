@@ -21,6 +21,7 @@ var AXI_SHELL_CONFIG_FILE;
 var AXI_SHELL_CONFIG;
 
 var AXI_SHELL_TEMPLATE = __dirname + "/src/.axibase-template";
+var AXI_SERVER_TEMPLATE = __dirname + "/src/.axiserver-template";
 
 var CDN_CONFIG_FILE = "config.json";
 
@@ -99,21 +100,35 @@ var isShellZsh = function () {
  */
 var ServerGen = function () {
 	var _installServer = function (serverObject) {
+		var setupVariableSsh = function (serverObject) {
+			var serverTemplate = fs.readFileSync(AXI_SERVER_TEMPLATE, "utf-8");
+			serverTemplate = serverTemplate.replace("<SERVER_NAME>", serverObject.name);
+			serverTemplate = serverTemplate.replace("<SERVER_IP>", serverObject.ip);
+			serverTemplate = serverTemplate.replace("<CURRENT_CONFIG_USER>", currentConfig.user);
+
+			serverConfig += "\n# [Auto Generated] SERVER TEMPLATE : " + serverObject.name + "\n";
+			serverConfig += serverTemplate + "\n\n";
+		};
+
 		var easySsh = function (serverObject) {
-			serverConfig += "alias ssh-" + serverObject.name + "='ssh " + currentConfig.user + "@" + serverObject.ip + "'\n";
-			serverConfig += "alias ssh-root-" + serverObject.name + "='ssh root@" + serverObject.ip + "'\n";
+			serverConfig += "\n# [Auto Generated] SSH : " + serverObject.name + "\n";
+			serverConfig += "alias ssh-" + serverObject.name + "='ssh_" + serverObject.name + " $@'\n";
+			serverConfig += "alias ssh-root-" + serverObject.name + "='ssh_" + serverObject.name + " --user root $@'\n";
 		};
 
 		var easyCopyFrom = function (serverObject) {
+			serverConfig += "\n#[Auto Generated] Copy From : " + serverObject.name + "\n";
 			serverConfig += "alias copy-from-" + serverObject.name + "='copy_from_server " + currentConfig.user + " " + serverObject.ip + " " + "/home/" + currentConfig.user + "/" + " $@" + "'\n";
 			serverConfig += "alias copy-from-root-" + serverObject.name + "='copy_from_server root " + serverObject.ip + " /root/ $@'\n";
 		};
 
 		var easyCopyTo = function (serverObject) {
+			serverConfig += "\n# [Auto Generated] Copy To : " + serverObject.name + "\n";
 			serverConfig += "alias copy-to-" + serverObject.name + "='copy_to_server " + currentConfig.user + " " + serverObject.ip + " " + "/home/" + currentConfig.user + "/" + " $@" + "'\n";
 			serverConfig += "alias copy-to-root-" + serverObject.name + "='copy_to_server root " + serverObject.ip + " /root/ $@'\n";
 		};
 
+		setupVariableSsh(serverObject);
 		easySsh(serverObject);
 		easyCopyFrom(serverObject);
 		easyCopyTo(serverObject);
