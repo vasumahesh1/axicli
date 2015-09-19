@@ -4,7 +4,6 @@ module.exports = function (grunt) {
     release: {
       options: {
         changelog: false,
-        additionalFiles: ['package.json'],
         add: true,
         commit: true,
         tag: false,
