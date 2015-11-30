@@ -44,8 +44,8 @@ Both commands perform a SSH to the specified Server.
 
 #### Quickly Copy Files from Servers
 ```sh
-copy-from-<server_name>:<absoluted_or_relative_path> <destination_path>
-copy-from-root-<server_name>:<absoluted_or_relative_path> <destination_path>
+copy-from-<server_name> <absoluted_or_relative_path> <destination_path>
+copy-from-root-<server_name> <absoluted_or_relative_path> <destination_path>
 ```
 Both commands copy. One makes the user as root.
 
