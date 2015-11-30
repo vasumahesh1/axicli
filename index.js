@@ -1,5 +1,4 @@
 /* global process */
-#!/usr/bin/env node
 
 var fs = require('fs');
 var colors = require('colors');
@@ -113,20 +112,20 @@ var ServerGen = function() {
 
     var easySsh = function(serverObject) {
       serverConfig += '\n# [Auto Generated] SSH : ' + serverObject.name + '\n';
-      serverConfig += 'alias ssh-' + serverObject.name + '='ssh_' + serverObject.name + ' $@'\n';
-      serverConfig += 'alias ssh-root-' + serverObject.name + '='ssh_' + serverObject.name + ' --user root $@'\n';
+      serverConfig += 'alias ssh-' + serverObject.name + '=\'ssh_' + serverObject.name + ' $@\'\n';
+      serverConfig += 'alias ssh-root-' + serverObject.name + '=\'ssh_' + serverObject.name + ' --user root $@\'\n';
     };
 
     var easyCopyFrom = function(serverObject) {
       serverConfig += '\n#[Auto Generated] Copy From : ' + serverObject.name + '\n';
-      serverConfig += 'alias copy-from-' + serverObject.name + '='copy_from_server ' + currentConfig.user + ' ' + serverObject.ip + ' ' + '/home/' + currentConfig.user + '/' + ' $@' + ''\n';
-      serverConfig += 'alias copy-from-root-' + serverObject.name + '='copy_from_server root ' + serverObject.ip + ' /root/ $@'\n';
+      serverConfig += 'alias copy-from-' + serverObject.name + '=\'copy_from_server ' + currentConfig.user + ' ' + serverObject.ip + ' ' + '/home/' + currentConfig.user + '/' + ' $@' + '\'\n';
+      serverConfig += 'alias copy-from-root-' + serverObject.name + '=\'copy_from_server root ' + serverObject.ip + ' /root/ $@\'\n';
     };
 
     var easyCopyTo = function(serverObject) {
       serverConfig += '\n# [Auto Generated] Copy To : ' + serverObject.name + '\n';
-      serverConfig += 'alias copy-to-' + serverObject.name + '='copy_to_server ' + currentConfig.user + ' ' + serverObject.ip + ' ' + '/home/' + currentConfig.user + '/' + ' $@' + ''\n';
-      serverConfig += 'alias copy-to-root-' + serverObject.name + '='copy_to_server root ' + serverObject.ip + ' /root/ $@'\n';
+      serverConfig += 'alias copy-to-' + serverObject.name + '=\'copy_to_server ' + currentConfig.user + ' ' + serverObject.ip + ' ' + '/home/' + currentConfig.user + '/' + ' $@' + '\'\n';
+      serverConfig += 'alias copy-to-root-' + serverObject.name + '=\'copy_to_server root ' + serverObject.ip + ' /root/ $@\'\n';
     };
 
     setupVariableSsh(serverObject);
@@ -137,7 +136,7 @@ var ServerGen = function() {
 
   // cat ~/.ssh/id_rsa.pub | ssh user@hostname 'cat >> ~/.ssh/authorized_keys'
   var _registerServer = function(serverObject, callback) {
-    exec('cat ~/.ssh/id_rsa.pub | ssh ' + currentConfig.user + '@' + serverObject.ip + ' 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys'',
+    exec('cat ~/.ssh/id_rsa.pub | ssh ' + currentConfig.user + '@' + serverObject.ip + ' \'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys\'',
       function(error, stdout, stderr) {
         if (error !== null) {
           UtilsInstance.nl();

@@ -10,7 +10,7 @@ module.exports = function (grunt) {
         push: true,
         pushTags: false,
         npm: true,
-        npmtag: false,
+        npmtag: true,
         commitMessage: '[AxiCLI] Release Commit <%= version %>',
         tagMessage: 'Release Build <%= version %>',
         github: {
