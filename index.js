@@ -47,7 +47,7 @@ var appendMissingConfigs = function (filePath, configCli) {
   var fileData = fs.readFileSync(filePath, "UTF-8");
   for (var i = configCli.length - 1; i >= 0; i--) {
     if (fileData.indexOf(configCli[i]) == -1) {
-      fs.appendFileSync(filePath, configCli[i] + "\n");
+      fs.appendFileSync(filePath, configCli[i] + "\r\n");
     }
   };
 };
@@ -106,26 +106,26 @@ var ServerGen = function () {
       serverTemplate = serverTemplate.replace("<SERVER_IP>", serverObject.ip);
       serverTemplate = serverTemplate.replace("<CURRENT_CONFIG_USER>", currentConfig.user);
 
-      serverConfig += "\n# [Auto Generated] SERVER TEMPLATE : " + serverObject.name + "\n";
-      serverConfig += serverTemplate + "\n\n";
+      serverConfig += "\r\n# [Auto Generated] SERVER TEMPLATE : " + serverObject.name + "\r\n";
+      serverConfig += serverTemplate + "\r\n\r\n";
     };
 
     var easySsh = function (serverObject) {
-      serverConfig += "\n# [Auto Generated] SSH : " + serverObject.name + "\n";
-      serverConfig += "alias ssh-" + serverObject.name + "='ssh_" + serverObject.name + " $@'\n";
-      serverConfig += "alias ssh-root-" + serverObject.name + "='ssh_" + serverObject.name + " --user root $@'\n";
+      serverConfig += "\r\n# [Auto Generated] SSH : " + serverObject.name + "\r\n";
+      serverConfig += "alias ssh-" + serverObject.name + "='ssh_" + serverObject.name + " $@'\r\n";
+      serverConfig += "alias ssh-root-" + serverObject.name + "='ssh_" + serverObject.name + " --user root $@'\r\n";
     };
 
     var easyCopyFrom = function (serverObject) {
-      serverConfig += "\n#[Auto Generated] Copy From : " + serverObject.name + "\n";
-      serverConfig += "alias copy-from-" + serverObject.name + "='copy_from_server " + currentConfig.user + " " + serverObject.ip + " " + "/home/" + currentConfig.user + "/" + " $@" + "'\n";
-      serverConfig += "alias copy-from-root-" + serverObject.name + "='copy_from_server root " + serverObject.ip + " /root/ $@'\n";
+      serverConfig += "\r\n#[Auto Generated] Copy From : " + serverObject.name + "\r\n";
+      serverConfig += "alias copy-from-" + serverObject.name + "='copy_from_server " + currentConfig.user + " " + serverObject.ip + " " + "/home/" + currentConfig.user + "/" + " $@" + "'\r\n";
+      serverConfig += "alias copy-from-root-" + serverObject.name + "='copy_from_server root " + serverObject.ip + " /root/ $@'\r\n";
     };
 
     var easyCopyTo = function (serverObject) {
-      serverConfig += "\n# [Auto Generated] Copy To : " + serverObject.name + "\n";
-      serverConfig += "alias copy-to-" + serverObject.name + "='copy_to_server " + currentConfig.user + " " + serverObject.ip + " " + "/home/" + currentConfig.user + "/" + " $@" + "'\n";
-      serverConfig += "alias copy-to-root-" + serverObject.name + "='copy_to_server root " + serverObject.ip + " /root/ $@'\n";
+      serverConfig += "\r\n# [Auto Generated] Copy To : " + serverObject.name + "\r\n";
+      serverConfig += "alias copy-to-" + serverObject.name + "='copy_to_server " + currentConfig.user + " " + serverObject.ip + " " + "/home/" + currentConfig.user + "/" + " $@" + "'\r\n";
+      serverConfig += "alias copy-to-root-" + serverObject.name + "='copy_to_server root " + serverObject.ip + " /root/ $@'\r\n";
     };
 
     setupVariableSsh(serverObject);
@@ -190,7 +190,7 @@ var Utils = function () {
 
         var baseTemplate = fs.readFileSync(AXI_SHELL_TEMPLATE, "UTF-8");
 
-        var mainTemplate = baseTemplate + "\n" + serverConfig;
+        var mainTemplate = baseTemplate + "\r\n" + serverConfig;
 
         fs.writeFileSync(AXI_SHELL_CONFIG, mainTemplate);
         callback(false, {
