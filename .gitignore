@@ -4,6 +4,8 @@
 # old skool
 .svn
 
+*.log
+
 # Exclude temp nibs and swap files
 *~.nib
 *.swp
