@@ -1,6 +1,6 @@
 {
   "name": "axicli",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "CLI for rapid development on Ionic and Other JS based Applications",
   "main": "index.js",
   "scripts": {
