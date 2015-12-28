@@ -1,7 +1,7 @@
 {
   "name": "axicli",
-  "version": "0.4.2",
-  "description": "CLI for rapid development on Ionic and Other JS based Applications",
+  "version": "0.4.3",
+  "description": "CLI for quick ssh and server management with ease. SSH with server names.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
