@@ -1,6 +1,6 @@
 {
   "name": "axicli",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "CLI for quick ssh and server management with ease. SSH with server names.",
   "main": "index.js",
   "scripts": {
